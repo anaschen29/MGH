@@ -1,2 +1,12 @@
 Experiment D=50, iterations_per_d = 20, n = 1000, step_size = 20 
 223.53619307688842 0.4950766605489114
+Experiment N=10000, iterations_per_n = 20, d = 20, step_size = 1000 
+10.90681876138341 0.7128024124584537
+Experiment N=20000, iterations_per_n = 15, d = 47, step_size = 500 
+10.198593014228386 0.7465914148838609
+Experiment N=1000, iterations_per_n = 10, d = 25 
+19.98625503045127 0.642537333535041
+Experiment N=1000, iterations_per_n = 10, d = 25 
+17.967848422480177 0.6517753256227442
+Experiment N=1000, iterations_per_n = 10, d = 25 
+10.570091160853096 0.7317065084693075

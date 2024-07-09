@@ -59,7 +59,7 @@ def power_law(x, a, b):
     return a * np.power(x, b)
 
 
-def power_law_fit(d_axis, results, store = True):
+def power_law_fit_fixed_n(d_axis, results, n, D, iterations_per_d, store = True):
     # Fit the power law to the data
     params, params_covariance = curve_fit(power_law, d_axis, results)
 
@@ -81,8 +81,8 @@ def power_law_fit(d_axis, results, store = True):
     plt.title(title)
     plt.savefig('Figures/fixed_n_figures/'+title+'.png')
     if store:
-        with open('Outputs/coefficients_fixed_d.txt', 'a') as file:
-            file.write(f'Experiment D={D}, iterations_per_d = {iterations_per_d}, n = {n}, step_size = {step_size} \n')
+        with open('Outputs/coefficients_fixed_n.txt', 'a') as file:
+            file.write(f'Experiment D={D}, iterations_per_d = {iterations_per_d}, n = {n} \n')
             file.write(write_array([a, b]))
 
 if __name__ == "__main__":
@@ -93,5 +93,5 @@ if __name__ == "__main__":
    D, iterations_per_d, n, step_size = 50, 20, 1000, 20
    d_axis, results = experiment_fix_n(D, iterations_per_d, n, step_size)
    save_data(D, iterations_per_d, n, step_size, d_axis, results)
-   power_law_fit(d_axis, results)
+   power_law_fit_fixed_n(d_axis, results, n, D, iterations_per_d)
     
