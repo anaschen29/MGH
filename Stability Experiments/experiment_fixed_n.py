@@ -46,7 +46,7 @@ def experiment_fix_n(D=40, iterations_per_d = 20, n = 5000, step_size = 5):
 #   plt.clear() 
   return d_axis, results 
 
-def save_data(D, iterations_per_d, n, step_size, d_axis, results):
+def save_data_fixed_n(D, iterations_per_d, n, step_size, d_axis, results):
     with open('Outputs/results_fixed_n.txt', 'a') as file:
         file.write(f'Experiment D={D}, iterations_per_d = {iterations_per_d}, n = {n}, step_size = {step_size} \n')
         # file.write((D, iterations_per_d, n, step_size)+'\n')
@@ -92,6 +92,6 @@ if __name__ == "__main__":
 
    D, iterations_per_d, n, step_size = 50, 20, 1000, 20
    d_axis, results = experiment_fix_n(D, iterations_per_d, n, step_size)
-   save_data(D, iterations_per_d, n, step_size, d_axis, results)
+   save_data_fixed_n(D, iterations_per_d, n, step_size, d_axis, results)
    power_law_fit_fixed_n(d_axis, results, n, D, iterations_per_d)
     

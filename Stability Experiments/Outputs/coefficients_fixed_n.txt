@@ -2,3 +2,9 @@ Experiment N=10000, iterations_per_n = 20, d = 20, step_size = 1000
 10.221846543756874 0.7196386358679637
 Experiment D=50, iterations_per_d = 20, n = 1000 
 148.15841353824868 0.6239579460076614
+Experiment D=50, iterations_per_d = 20, n = 1000 
+165.8238792002999 0.5823734223214992
+Experiment D=100, iterations_per_d = 5, n = 875 
+166.2056974796189 0.5428471851695784
+Experiment D=200, iterations_per_d = 10, n = 1000 
+206.6891947339086 0.5204310243529747
