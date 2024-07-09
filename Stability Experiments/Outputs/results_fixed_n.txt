@@ -49,3 +49,6 @@ Experiment D=50, iterations_per_d = 20, n = 1000, step_size = 20
 Experiment D=50, iterations_per_d = 20, n = 1000, step_size = 20 
 1 21 41
 197.8795642469841 1039.0538673055466 1431.2989015916405
+Experiment D=50, iterations_per_d = 20, n = 1000, step_size = 20 
+1 21 41
+189.31696354895917 1051.2042026855652 1380.631430488454

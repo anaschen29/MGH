@@ -1,0 +1,2 @@
+Experiment D=50, iterations_per_d = 20, n = 1000, step_size = 20 
+223.53619307688842 0.4950766605489114
