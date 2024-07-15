@@ -90,7 +90,7 @@ if __name__ == "__main__":
 #    d_axis, results = experiment_fix_n(D = 20, iterations_per_d = 10, n = 50000, step_size = 5)
 #    save_data(D, iterations_per_d, n, step_size, d_axis, results)
 
-   D, iterations_per_d, n, step_size = 50, 20, 1000, 20
+   D, iterations_per_d, n, step_size = 1000, 10, 27819, 50
    d_axis, results = experiment_fix_n(D, iterations_per_d, n, step_size)
    save_data_fixed_n(D, iterations_per_d, n, step_size, d_axis, results)
    power_law_fit_fixed_n(d_axis, results, n, D, iterations_per_d)
