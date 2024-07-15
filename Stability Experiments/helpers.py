@@ -61,19 +61,32 @@ def experiment(Sigma, n):
   np.random.seed(int(time.time()))
 
   while True:
-    try:
-      X1, Y1, _ = new_distribution(Sigma, n)
-      X2, Y2, _ = new_distribution(Sigma, n)
+    # try:
+      X1, Y1, _ = distribution(Sigma, n)
+      X2, Y2, _ = distribution(Sigma, n)
       X3 = draw_multivariate_normal(Sigma, 1)
 
       left = (optimizer(X1, Y1) - optimizer(X2, Y2)).T
       return ((left @ (X3.T)).item())**2
-    except:
-       print('failed')
-       pass
+    # except:
+    #    print('failed')
+    #    pass
 
+import numpy as np
+
+def generate_random_covariance_matrix(d, error = 1e-6):
+    # Generate a random matrix A
+    while True:
+      A = np.random.rand(d, d)
+      if abs(np.linalg.det(A)) < error:
+         continue
+    # Compute A * A^T to ensure positive semi-definiteness
+      cov = np.dot(A, A.T)
     
+      return cov
 
-Sigma = np.array([[1, 0.5], [0.5, 2]])  # 2x2 covariance matrix
-num_samples = 1000
-print(experiment(Sigma, num_samples))
+# Example usage:
+# d = 5  # dimension
+# random_cov = generate_random_covariance_matrix(d)
+
+print(generate_random_covariance_matrix(d = 10))

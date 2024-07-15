@@ -11,7 +11,16 @@ from concurrent.futures import ThreadPoolExecutor, as_completed
 from helpers import *
 import os
 
-import os
+
+
+def new_single_thread_experiment_fix_d(Sigma, N = 40, step_size = 50):
+    d, _ = np.shape(Sigma)
+    n_axis = range(3*d, N, step_size)
+    inputs = [(Sigma, n) for n in n_axis]
+    thread = []
+    for Sigma, n in tqdm(inputs):
+        thread.append((n, experiment(Sigma, n)))
+    return thread
 
 
 
@@ -24,29 +33,52 @@ def single_thread_experiment_fix_d(N = 40, d = 50, step_size = 50):
         thread.append((n,experiment(d,n)))
     return thread
 
+default_d = 29
  
-def experiment_fix_d(N = 100, iterations_per_n = 20, d = 50, step_size = 50):
-  results = []
-  n_axis = range(3*d, N, step_size)
+def new_experiment_fix_d(N = 100, iterations_per_n = 20, Sigma = generate_random_covariance_matrix(default_d), step_size = 50):
+    results = []
+    d, _ = Sigma.shape
+    n_axis = range(3*d, N, step_size)
 
-  with ThreadPoolExecutor(max_workers = iterations_per_n) as executor:
-    futures = [executor.submit(single_thread_experiment_fix_d, N, d, step_size) for _ in range(iterations_per_n)]
-    results += [future.result() for future in concurrent.futures.as_completed(futures)]
-  results = list(itertools.chain(*results))
+    with ThreadPoolExecutor(max_workers=iterations_per_n) as executor:
+        futures = [executor.submit(new_single_thread_experiment_fix_d, Sigma, N, step_size) for _ in range(iterations_per_n)]
+        results += [future.result() for future in concurrent.futures.as_completed(futures)]
+    print(results)
+    results = list(itertools.chain(*results))
+    new = sorted(results)
+  #   print(new)
+    results = average_consecutive(new, iterations_per_n)
+    plt.plot(n_axis, results)
+    plt.xlabel("Number of samples (n)")
+    plt.ylabel("Volatility")
+    title = "Experiment results for fixed number of features, d="+str(d)
+    plt.title(title)
+    plt.savefig('Figures/fixed_d_figures/'+title+'.png')
+  # #   plt.clear() 
+    return n_axis, results
+
+def experiment_fix_d(N = 100, iterations_per_n = 20, d = 50, step_size = 50):
+    results = []
+    n_axis = range(3*d, N, step_size)
+
+    with ThreadPoolExecutor(max_workers = iterations_per_n) as executor:
+      futures = [executor.submit(single_thread_experiment_fix_d, N, d, step_size) for _ in range(iterations_per_n)]
+      results += [future.result() for future in concurrent.futures.as_completed(futures)]
+    results = list(itertools.chain(*results))
 #   print(results)
 #   results = list(results[0])
 #   print('results', results)
-  new = sorted(results)
-#   print(new)
-  results = average_consecutive(new, iterations_per_n)
-  plt.plot(n_axis, results)
-  plt.xlabel("Number of samples (n)")
-  plt.ylabel("Volatility")
-  title = "Experiment results for fixed number of features, d="+str(d)
-  plt.title(title)
-  plt.savefig('Figures/fixed_d_figures/'+title+'.png')
-#   plt.clear() 
-  return n_axis, results 
+    new = sorted(results)
+  #   print(new)
+    results = average_consecutive(new, iterations_per_n)
+    plt.plot(n_axis, results)
+    plt.xlabel("Number of samples (n)")
+    plt.ylabel("Volatility")
+    title = "Experiment results for fixed number of features, d="+str(d)
+    plt.title(title)
+    plt.savefig('Figures/fixed_d_figures/'+title+'.png')
+  #   plt.clear() 
+    return n_axis, results 
 
 
 def save_data_fixed_d(N, iterations_per_n, d, step_size, n_axis, results):
@@ -86,15 +118,15 @@ def power_law_fit_fixed_d(n_axis, results, d, N, iterations_per_n, store = True)
         with open('Outputs/coefficients_fixed_d.txt', 'a') as file:
             file.write(f'Experiment N={N}, iterations_per_n = {iterations_per_n}, d = {d} \n')
             file.write(write_array([a, b]))
+
+
+
 if __name__ == "__main__":
-   N = 20000
-   step_size = 500
-   d = 47
-   iterations_per_n = 15
 
-   n_axis, results = experiment_fix_d(N, iterations_per_n, d, step_size)
-   save_data_fixed_d(N, iterations_per_n, d, step_size, n_axis, results)
-   power_law_fit_fixed_d(n_axis, results, d, N, iterations_per_n)
-    # print(experiment(20, 1000))
-
-
+  d = 17
+  Sigma = generate_random_covariance_matrix(d)
+  N = 10000
+  iterations_per_n = 15
+  step_size = 20
+  n_axis, results = new_experiment_fix_d(N, iterations_per_n, Sigma = Sigma, step_size = step_size)
+  power_law_fit_fixed_d(n_axis, results, d, N, iterations_per_n)
