@@ -46,20 +46,28 @@ def generate_train_test_data(X, y, n, alpha = 0, test_size = 100):
 
 def train_model(S, model_class = None, criterion = None, optimizer = None, lr= 0.01, num_epochs = 100):
     X, y = S
-    model = model_class()
-
     # make this optional
     X = torch.tensor(X, dtype = torch.float32)
     y = torch.tensor(y, dtype = torch.float32)
 
-    if model_class == None:
-        model_class = LinearRegressor
+    
+
+    # if model_class == None:
+    #     model_class = LinearRegressor
+
+    print(X.shape[1], type(X.shape[1]))
+    
+    model = LinearRegressor(X.shape[1])
+    
 
     if criterion == None:
         criterion = nn.MSELoss()
 
     if optimizer == None:
         optimizer = optim.SGD(model.parameters(), lr = lr)
+
+   
+    
 
     for _ in tqdm(range(num_epochs)):
         y_pred = model(X)
@@ -89,8 +97,7 @@ def train_in_parallel(S1, S2, model_class = None):
 # compute_volatility: take l2**2 norm of the difference of predictions
 def compute_volatility(model1, model2, test_data):
     test_data = torch.tensor(test_data, dtype = torch.float32)
-    print(type(model1(test_data)))
-    return np.linalg.norm(model1(test_data) - model2(test_data))**2
+    return torch.norm(model1(test_data) - model2(test_data), p = 2)**2
 
 def experiment(X, y, alpha = 0, test_size = 100, model_class = None):
     S1, S2, testX = generate_train_test_data(X, y, n, alpha, test_size)
@@ -130,4 +137,4 @@ if __name__ == "__main__":
     Sigma = generate_random_covariance_matrix(d)
     c = np.random.randn(d).reshape(1, d)
     X, y, _ = distribution(Sigma, n, c, variance = 0.2)
-    experiment(X, y, alpha = 0, test_size = 100, model_class = LinearRegressor)
+    print(experiment(X, y, alpha = 0, test_size = 100, model_class = LinearRegressor))
