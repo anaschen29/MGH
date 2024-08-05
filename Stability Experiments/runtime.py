@@ -12,6 +12,9 @@ import torch
 from model_classes import LinearRegressor
 import torch.nn as nn
 import torch.optim as optim
+import warnings
+
+warnings.filterwarnings("ignore", category = UserWarning)
 # helper for both
 
 ## draw_data(D, n, with_replacement = True)
@@ -21,7 +24,7 @@ def draw_data(X, y, n, with_replacement = True):
     indices = np.random.choice(num_samples, size = n, replace = True)
     return X[indices], y[indices]
 
-def generate_train_test_data(X, y, n, alpha = 0, test_size = 100):
+def generate_train_test_data(X, y, n, alpha: float = 0, test_size = 100):
     intersectionX, intersectionY = draw_data(X, y, int(alpha*n))
     rest1X, rest1y = draw_data(X, y, n - int(alpha*n))
     rest2X, rest2y = draw_data(X, y, n - int(alpha*n))
@@ -44,43 +47,7 @@ def generate_train_test_data(X, y, n, alpha = 0, test_size = 100):
 # parallelizes 
 
 
-def train_model(S, model_class = None, criterion = None, optimizer = None, lr= 0.01, num_epochs = 100):
-    X, y = S
-    # make this optional
-    X = torch.tensor(X, dtype = torch.float32)
-    y = torch.tensor(y, dtype = torch.float32)
 
-    
-
-    # if model_class == None:
-    #     model_class = LinearRegressor
-
-    print(X.shape[1], type(X.shape[1]))
-    
-    model = LinearRegressor(X.shape[1])
-    
-
-    if criterion == None:
-        criterion = nn.MSELoss()
-
-    if optimizer == None:
-        optimizer = optim.SGD(model.parameters(), lr = lr)
-
-   
-    
-
-    for _ in tqdm(range(num_epochs)):
-        y_pred = model(X)
-
-        loss = criterion(y_pred, y)
-
-        optimizer.zero_grad()
-
-        loss.backward()
-
-        optimizer.step()
-
-    return model
 
 def train_in_parallel(S1, S2, model_class = None):
     pool = multiprocessing.Pool(processes = 2)
@@ -88,33 +55,46 @@ def train_in_parallel(S1, S2, model_class = None):
     inputs = [(S1, model_class), (S2, model_class)]
     results = []
     for arg in inputs:
-        results.append(pool.apply_async(train_model, args = arg))
+        results.append(pool.apply_async(model_class.train_model, args = arg))
     pool.close()
     pool.join()
-
+    # print(results[0], results[1])
     return results[0].get(), results[1].get()
+
+def train_sequential(S1, S2, model_class = None):
+    inputs = [(S1, model_class), (S2, model_class)]
+    results = []
+
+    for arg in inputs:
+        result = model_class.train_model(*arg)
+        results.append(result)
+
+    return results[0], results[1]
 
 # compute_volatility: take l2**2 norm of the difference of predictions
 def compute_volatility(model1, model2, test_data):
     test_data = torch.tensor(test_data, dtype = torch.float32)
-    return torch.norm(model1(test_data) - model2(test_data), p = 2)**2
+    return (torch.norm(model1(test_data) - model2(test_data), p = 2)**2).item()
 
-def experiment(X, y, alpha = 0, test_size = 100, model_class = None):
+def volatility_experiment(X, y, alpha = 0, test_size = 100, model_class = None):
     S1, S2, testX = generate_train_test_data(X, y, n, alpha, test_size)
-
     model1, model2 = train_in_parallel(S1, S2, model_class)
 
-    return compute_volatility(model1, model2, test_data=testX )
+    return compute_volatility(model1, model2, test_data=testX)
 
 # detect convergence
-def detect_convergence(X, y, alpha = 0, rounds = 10000, test_size = 100, model_class = None, epsilon = 1e-4):
+def detect_convergence(X, y, alpha: float = 0, rounds = 100, test_size = 25, model_class = None, epsilon = 1e-4):
     total = 0
-    for i in range(rounds):
-        val = experiment(X, y, alpha, test_size, model_class)
-        if abs((total/i- (total+i)/(i+2))) < epsilon:
+    running_scores = []
+    for i in range(1, rounds):
+        val = volatility_experiment(X, y, alpha, test_size, model_class)
+        if abs((total/i- (total+val)/(i+1))) < epsilon:
+            print(total/i)
             return i, val
         total += val
-    return 'Failed to converge in {rounds}', total/i
+        running_scores.append(val/i)
+    
+    return 'Failed to converge in {rounds}', running_scores
 
 
 
@@ -124,6 +104,12 @@ def detect_convergence(X, y, alpha = 0, rounds = 10000, test_size = 100, model_c
 
 # E [l(A(S(i),zi))−l(A(S),zi)] where S, z' drawn from data 
 # and zi drawn uniformly from S
+
+
+def stability_one_draw(X, y, n, model_class = None, criterion = None, optimizer = None, lr = 0.01, num_epochs = 100):
+    train_data = draw_data(X, y, n)
+    z_prime = draw_data(X, y, 1)
+    
 
 # draw_data(D, n) --> S
 
@@ -137,4 +123,10 @@ if __name__ == "__main__":
     Sigma = generate_random_covariance_matrix(d)
     c = np.random.randn(d).reshape(1, d)
     X, y, _ = distribution(Sigma, n, c, variance = 0.2)
-    print(experiment(X, y, alpha = 0, test_size = 100, model_class = LinearRegressor))
+
+    S1, S2, testX = generate_train_test_data(X, y, n, alpha = 0, test_size = 10)
+    model1, model2 = train_in_parallel(S1, S2, model_class = LinearRegressor)
+    # print(model1.state_dict()['linear.weight'])
+    # print(c)
+    # _, running_scores = detect_convergence(X, y, alpha = 0, rounds = 10, test_size = 10, model_class = LogisticRegressor, epsilon = 1e-2)
+    
