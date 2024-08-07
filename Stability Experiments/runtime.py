@@ -9,10 +9,17 @@ from helpers import *
 import multiprocessing
 import os
 import torch
-from model_classes import LinearRegressor
+from model_classes import LinearRegressor, LogisticRegressor, FeedForwardNN
 import torch.nn as nn
 import torch.optim as optim
 import warnings
+from sklearn.datasets import make_classification
+from torch.utils.data import DataLoader, Subset
+from torchvision import datasets
+from torchvision import transforms
+import torch.optim as optim
+from torchvision.transforms import ToTensor
+
 
 warnings.filterwarnings("ignore", category = UserWarning)
 # helper for both
@@ -40,26 +47,22 @@ def generate_train_test_data(X, y, n, alpha: float = 0, test_size = 100):
     
     return S1, S2, testX
 
-
-
 # parallelize_training(S1, S2, test_data, model = model1)
 # model_training
 # parallelizes 
 
 
-
-
-def train_in_parallel(S1, S2, model_class = None):
+def train_in_parallel(S1, S2, model_class = LinearRegressor, lr = 0.0001):
+    d = S1[0].shape[1]
     pool = multiprocessing.Pool(processes = 2)
-
-    inputs = [(S1, model_class), (S2, model_class)]
+    m1, m2 = model_class(d), model_class(d)
+    inputs = [(m1, S1, lr), (m2, S2, lr)]
     results = []
     for arg in inputs:
         results.append(pool.apply_async(model_class.train_model, args = arg))
     pool.close()
     pool.join()
-    # print(results[0], results[1])
-    return results[0].get(), results[1].get()
+    return m1.model, m2.model
 
 def train_sequential(S1, S2, model_class = None):
     inputs = [(S1, model_class), (S2, model_class)]
@@ -122,11 +125,16 @@ if __name__ == "__main__":
     n = 18857
     Sigma = generate_random_covariance_matrix(d)
     c = np.random.randn(d).reshape(1, d)
-    X, y, _ = distribution(Sigma, n, c, variance = 0.2)
 
-    S1, S2, testX = generate_train_test_data(X, y, n, alpha = 0, test_size = 10)
-    model1, model2 = train_in_parallel(S1, S2, model_class = LinearRegressor)
-    # print(model1.state_dict()['linear.weight'])
-    # print(c)
-    # _, running_scores = detect_convergence(X, y, alpha = 0, rounds = 10, test_size = 10, model_class = LogisticRegressor, epsilon = 1e-2)
+    transform = transforms.Compose([
+    transforms.Pad(2),  # Pad with 2 pixels on each side
+    transforms.ToTensor(),  # Convert PIL image to tensor
+    transforms.Normalize((0.1307,), (0.3081,))  # Normalize with mean and std of MNIST
+])
+
+
+
+
+
+    
     
