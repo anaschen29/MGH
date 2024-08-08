@@ -139,6 +139,7 @@ class LeNet(nn.Module):
     self.linear2 = nn.Linear(84, 10)
 
     self.activation = activation
+    # self.model = lambda x: self.forward(x)
 
   def forward(self, x):
     out = self.conv1(x)
@@ -156,18 +157,19 @@ class LeNet(nn.Module):
     return out
 
   
-  def train_model(self, train_loader, lr = 0.0001, num_epochs = 1000):
+  def train_model(self, train_loader, lr = 0.01, num_epochs = 50):
     criterion = nn.CrossEntropyLoss()
-    optimizer = optim.SGD(self.parameters(), lr, momentum = 0.9)
-    
+    optimizer = optim.SGD(self.parameters(), lr)
+    self.train()
     for _ in tqdm(range(num_epochs)):
       self.train()
       for _, (data, target) in enumerate(train_loader):
         optimizer.zero_grad()
-        output = self.forward(data)
+        output = self(data)
         loss = criterion(output, target)
         loss.backward()
         optimizer.step()
+
     
 
     
